@@ -1,5 +1,3 @@
-
-
 // // Provider for the search query (holds the text typed in the search bar)
 // // This is a simple provider that stores a String and updates when the user types
 // final searchQueryProvider = StateProvider<String>((ref) => '');
@@ -39,8 +37,6 @@
 //   (ref) => NewsStateNotifier(ref, NewsServices()),
 // );
 
-
-
 // class ArticleState{
 //     final List<Article> articles;
 //     final bool isLoading;
@@ -64,8 +60,6 @@
 //     }
 // }
 
-
-
 // class ArticleNotifier extends StateNotifier<ArticleState>{
 //     final NewsServices _newsService;
 
@@ -80,16 +74,13 @@
 //             state =state.copyWith(isLoading:true,error:"");
 //         }catch(e){
 //             log('Error fetching posts: $e');
-//             state = state.copyWith(error: 'Failed to load articles', isLoading:false);   
+//             state = state.copyWith(error: 'Failed to load articles', isLoading:false);
 //         }
 //     }
 // }
 // final articleProvider = StateNotifierProvider<ArticleNotifier, ArticleState>((ref){
 //     return ArticleNotifier(NewsServices());
 // });
-
-
-
 
 // // Provider for the search query (holds the text typed in the search bar)
 // final searchQueryProvider = StateProvider<String>((ref) => '');
@@ -154,8 +145,11 @@ import 'dart:developer';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_page/api_services.dart';
 import 'package:login_page/models.dart';
+import 'package:flutter/material.dart';
 
-final searchQueryProvider = StateProvider<String>((ref) => 'flutter');
+final themeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
+
+final searchQueryProvider = StateProvider<String>((ref) => '');
 
 class ArticleState {
   final List<Article> articles;
@@ -186,7 +180,6 @@ class ArticleNotifier extends StateNotifier<ArticleState> {
   final NewsServices _apiServices;
 
   ArticleNotifier(this.ref, this._apiServices) : super(ArticleState()) {
-    
     fetchNews(ref.watch(searchQueryProvider));
   }
 
@@ -195,18 +188,25 @@ class ArticleNotifier extends StateNotifier<ArticleState> {
       // Set loading state
       state = state.copyWith(isLoading: true, error: '');
       // Fetch articles (handle empty query)
-      final articles = await _apiServices.fetchNews(query.isEmpty ? 'news' : query);
+      final articles = await _apiServices.fetchNews(
+        query.isEmpty ? 'news' : query,
+      );
       // Update state with articles
       state = state.copyWith(articles: articles, isLoading: false, error: '');
     } catch (e) {
       log('Error fetching articles: $e');
       // Update state with error
-      state = state.copyWith(error: 'Failed to load articles', isLoading: false);
+      state = state.copyWith(
+        error: 'Failed to load articles',
+        isLoading: false,
+      );
     }
   }
 }
 
 // Provider for ArticleNotifier
-final articleProvider = StateNotifierProvider<ArticleNotifier, ArticleState>((ref) {
+final articleProvider = StateNotifierProvider<ArticleNotifier, ArticleState>((
+  ref,
+) {
   return ArticleNotifier(ref, NewsServices());
 });
