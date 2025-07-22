@@ -42,10 +42,8 @@ class NewsServices {
         'country': 'us',
         'apiKey': apiKey,
       });
-
       final response = await http.get(uri);
       log('GET ${response.request?.url} -> ${response.statusCode}');
-
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         if (json['status'] == 'error') {
@@ -65,6 +63,49 @@ class NewsServices {
       }
     } catch (e) {
       log('Error fetching category articles: $e');
+      throw Exception('Failed to load category articles: $e');
+    }
+  }
+
+  Future<List<Article>> fetchNewsByCategoryAndQuery(
+    String category,
+    String query,
+  ) async {
+    try {
+      final uri = Uri.https(baseUrl, '/v2/top-headlines', {
+        'category': category,
+        'q':
+            query.isEmpty
+                ? category
+                : query, // Fallback to category if query is empty
+        'country': 'us',
+        'apiKey': apiKey,
+      });
+      final response = await http.get(uri);
+      log('GET ${response.request?.url} -> ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json['status'] == 'error') {
+          throw Exception('API Error: ${json['message']}');
+        }
+        final articlesJson = json['articles'] as List<dynamic>;
+        final articles =
+            articlesJson.map((item) => Article.fromJson(item)).toList();
+        if (articles.isNotEmpty) {
+          log(
+            'Category [$category] Query [$query] -> First Article: ${articles.first.title}',
+          );
+        } else {
+          log('No articles found for category [$category] and query [$query]');
+        }
+        return articles;
+      } else {
+        throw Exception(
+          'Failed to load category articles. Status Code: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      log('Error fetching category articles for query [$query]: $e');
       throw Exception('Failed to load category articles: $e');
     }
   }

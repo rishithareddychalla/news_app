@@ -40,15 +40,17 @@ class ArticleCard extends StatelessWidget {
                 height: 200,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => const SizedBox(
-                  height: 200,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 200,
-                  color: theme.colorScheme.surfaceVariant,
-                  child: const Icon(Icons.broken_image),
-                ),
+                placeholder:
+                    (context, url) => const SizedBox(
+                      height: 200,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                errorWidget:
+                    (context, url, error) => Container(
+                      height: 200,
+                      color: theme.colorScheme.surfaceVariant,
+                      child: const Icon(Icons.broken_image),
+                    ),
               ),
             Padding(
               padding: const EdgeInsets.all(16),
@@ -85,7 +87,9 @@ class ArticleCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        article.publishedAt?.toLocal().toString().split(' ')[0] ??
+                        article.publishedAt?.toLocal().toString().split(
+                              ' ',
+                            )[0] ??
                             'Unknown date',
                         style: TextStyle(
                           color: textColor.withOpacity(0.6),

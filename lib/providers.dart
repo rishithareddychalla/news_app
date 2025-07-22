@@ -42,17 +42,13 @@ class ArticleNotifier extends StateNotifier<ArticleState> {
 
   Future<void> fetchNews(String query) async {
     try {
-      // Set loading state
       state = state.copyWith(isLoading: true, error: '');
-      // Fetch articles (handle empty query)
       final articles = await _apiServices.fetchNews(
         query.isEmpty ? 'news' : query,
       );
-      // Update state with articles
       state = state.copyWith(articles: articles, isLoading: false, error: '');
     } catch (e) {
       log('Error fetching articles: $e');
-      // Update state with error
       state = state.copyWith(
         error: 'Failed to load articles',
         isLoading: false,
@@ -64,18 +60,31 @@ class ArticleNotifier extends StateNotifier<ArticleState> {
 class CategoryNotifier extends StateNotifier<ArticleState> {
   final String category;
   final NewsServices _apiService;
+  final Ref ref;
 
-  CategoryNotifier(this.category, this._apiService) : super(ArticleState()) {
+  CategoryNotifier(this.category, this._apiService, this.ref)
+    : super(ArticleState()) {
     log('Initializing CategoryNotifier for category: $category');
     fetchCategoryNews();
+    // Watch searchQueryProvider for changes
+    ref.listen<String>(searchQueryProvider, (previous, next) {
+      if (previous != next) {
+        fetchCategoryNews(query: next);
+      }
+    });
   }
 
-  Future<void> fetchCategoryNews() async {
+  Future<void> fetchCategoryNews({String query = ''}) async {
     try {
-      log('Fetching news for category: $category');
+      log('Fetching news for category: $category, query: $query');
       state = state.copyWith(isLoading: true, error: '');
-      final articles = await _apiService.fetchNewsByCategory(category);
-      log('Fetched ${articles.length} articles for category: $category');
+      final articles = await _apiService.fetchNewsByCategoryAndQuery(
+        category,
+        query,
+      );
+      log(
+        'Fetched ${articles.length} articles for category: $category, query: $query',
+      );
       state = state.copyWith(articles: articles, isLoading: false);
     } catch (e) {
       log('Error fetching $category news: $e');
@@ -95,5 +104,5 @@ final articleProvider = StateNotifierProvider<ArticleNotifier, ArticleState>((
 });
 final categoryProvider =
     StateNotifierProvider.family<CategoryNotifier, ArticleState, String>(
-      (ref, category) => CategoryNotifier(category, NewsServices()),
+      (ref, category) => CategoryNotifier(category, NewsServices(), ref),
     );
