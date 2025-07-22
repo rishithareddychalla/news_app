@@ -1,14 +1,13 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:login_page/main.dart';
+import 'package:login_page/providers.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:login_page/screens/login.dart'; // 👈 Adjust path as needed
-
-/// Theme provider
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
+import 'package:login_page/screens/login.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -103,18 +102,36 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeModeProvider) == ThemeMode.dark;
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor, // Matches HomePage
       appBar: AppBar(
-        title: const Text('👤 Profile'),
+        title: Text(
+          '👤 Profile',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
         centerTitle: true,
-        elevation: 0,
-        backgroundColor: theme.appBarTheme.backgroundColor,
+        elevation: 2,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [colorScheme.primary, colorScheme.primaryContainer],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        foregroundColor: colorScheme.onPrimary, // White back arrow and title
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
             onPressed: _logout,
+            color: colorScheme.onPrimary, // Matches foregroundColor
           ),
         ],
       ),
@@ -126,20 +143,25 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               onTap: _pickImage,
               child: CircleAvatar(
                 radius: 60,
-                backgroundColor: Colors.blueAccent.withOpacity(0.2),
+                backgroundColor: colorScheme.primary.withOpacity(0.2),
                 backgroundImage:
                     _profileImage != null ? FileImage(_profileImage!) : null,
                 child:
                     _profileImage == null
-                        ? const Icon(Icons.camera_alt, size: 40)
+                        ? Icon(
+                          Icons.camera_alt,
+                          size: 40,
+                          color: colorScheme.primary,
+                        )
                         : null,
-              ),
+              ).animate().scale(duration: 300.ms, curve: Curves.easeInOut),
             ),
             const SizedBox(height: 20),
             Text(
               _username,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: colorScheme.onBackground,
               ),
             ),
             const SizedBox(height: 40),
@@ -153,6 +175,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ref.read(themeModeProvider.notifier).state =
                         value ? ThemeMode.dark : ThemeMode.light;
                   },
+                  activeColor: colorScheme.primary,
                 ),
               ],
             ),
