@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:login_page/main.dart';
 import 'package:login_page/providers.dart';
+import 'package:login_page/screens/saved_articles.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -165,6 +166,28 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
             ),
             const SizedBox(height: 40),
+
+            ElevatedButton.icon(
+              icon: Icon(Icons.bookmark, color: colorScheme.onPrimary),
+              label: Text(
+                'Saved Articles',
+                style: TextStyle(color: colorScheme.onPrimary),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SavedArticlesPage()),
+                );
+              },
+            ).animate().fadeIn(duration: 300.ms),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
