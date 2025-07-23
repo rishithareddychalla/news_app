@@ -1,10 +1,12 @@
 import 'dart:developer';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_page/models.dart';
 import 'package:login_page/providers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:login_page/screens/profile.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:login_page/screens/saved_articles.dart';
@@ -12,7 +14,12 @@ import 'package:share_plus/share_plus.dart'; // Added for sharing
 
 class CategoryPage extends ConsumerStatefulWidget {
   final String category;
-  const CategoryPage({super.key, required this.category});
+  final String username;
+  const CategoryPage({
+    super.key,
+    required this.category,
+    required this.username,
+  });
 
   @override
   ConsumerState<CategoryPage> createState() => _CategoryPageState();
@@ -78,6 +85,44 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
           ),
         ),
         foregroundColor: colorScheme.onPrimary,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Consumer(
+              builder: (context, ref, _) {
+                final imagePath = ref.watch(profileImageProvider);
+                final hasImage =
+                    imagePath != null && File(imagePath).existsSync();
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ProfilePage()),
+                    );
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: colorScheme.primary,
+                    radius: 20,
+                    backgroundImage:
+                        hasImage ? FileImage(File(imagePath)) : null,
+                    child:
+                        hasImage
+                            ? null
+                            : Text(
+                              widget.username[0].toUpperCase(),
+                              style: TextStyle(
+                                color: colorScheme.onPrimary,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                  ).animate().scale(duration: 300.ms, curve: Curves.easeInOut),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         color: colorScheme.primary,
