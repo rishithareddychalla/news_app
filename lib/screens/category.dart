@@ -3,14 +3,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_page/l10n/app_localizations.dart';
 import 'package:login_page/models.dart';
 import 'package:login_page/providers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:login_page/screens/profile.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:login_page/screens/saved_articles.dart';
-import 'package:share_plus/share_plus.dart'; // Added for sharing
+import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
 
 class CategoryPage extends ConsumerStatefulWidget {
   final String category;
@@ -58,16 +59,18 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(categoryProvider(widget.category.toLowerCase()));
+    final state = ref.watch(categoryProvider(widget.category));
     final searchQuery = ref.watch(searchQueryProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          '${widget.category[0].toUpperCase()}${widget.category.substring(1)} News',
+          l10n?.category(widget.category) ??
+              '${widget.category[0].toUpperCase()}${widget.category.substring(1)} News',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: 24,
@@ -110,7 +113,9 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
                         hasImage
                             ? null
                             : Text(
-                              widget.username[0].toUpperCase(),
+                              widget.username.isNotEmpty
+                                  ? widget.username[0].toUpperCase()
+                                  : 'G',
                               style: TextStyle(
                                 color: colorScheme.onPrimary,
                                 fontSize: 20,
@@ -140,7 +145,9 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search ${widget.category} news... ✍️',
+                  hintText:
+                      l10n?.searchHintCategory(widget.category) ??
+                      'Search ${widget.category} news... ✍️',
                   hintStyle: TextStyle(
                     color: colorScheme.onSurface.withOpacity(0.6),
                   ),
@@ -237,7 +244,7 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
                                   .fetchCategoryNews(query: searchQuery);
                             },
                             icon: const Icon(Icons.refresh),
-                            label: const Text('Retry'),
+                            label: Text(l10n?.retry ?? 'Retry'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: colorScheme.primary,
                               foregroundColor: colorScheme.onPrimary,
@@ -250,7 +257,8 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
                   if (state.articles.isEmpty) {
                     return Center(
                       child: Text(
-                        'No articles found for this category.\nTry a different keyword or pull to refresh.',
+                        l10n?.noArticles ??
+                            'No articles found for this category.\nTry a different keyword!',
                         style: theme.textTheme.bodyLarge,
                         textAlign: TextAlign.center,
                       ),
@@ -262,7 +270,7 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
                     separatorBuilder: (_, __) => const SizedBox(height: 16),
                     itemBuilder: (_, i) {
                       log(
-                        'Rendering article ${i + 1}/${state.articles.length}: ${state.articles[i].title}',
+                        'Rendering article ${i + 1}/${state.articles.length}: ${state.articles[i].title ?? 'No title'}',
                       );
                       return ArticleCard(article: state.articles[i])
                           .animate()
@@ -297,6 +305,7 @@ class ArticleCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final isBookmarked = ref
         .watch(bookmarkProvider)
         .any((a) => a.url == article.url);
@@ -316,7 +325,12 @@ class ArticleCard extends ConsumerWidget {
               await launchUrl(uri, mode: LaunchMode.externalApplication);
             } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Could not open the article: $e')),
+                SnackBar(
+                  content: Text(
+                    l10n?.urlLaunchError(e.toString()) ??
+                        'Could not open the article: $e',
+                  ),
+                ),
               );
             }
           }
@@ -328,7 +342,7 @@ class ArticleCard extends ConsumerWidget {
               Stack(
                 children: [
                   Hero(
-                    tag: 'article-${article.url}',
+                    tag: 'article-${article.url ?? 'default'}',
                     child: CachedNetworkImage(
                       imageUrl: article.urlToImage!,
                       height: 220,
@@ -380,7 +394,7 @@ class ArticleCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    article.title ?? 'No title available',
+                    article.title ?? l10n?.noTitle ?? 'No title available',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
@@ -391,7 +405,9 @@ class ArticleCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    article.description ?? 'No description provided',
+                    article.description ??
+                        l10n?.noDescription ??
+                        'No description provided',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurface.withOpacity(0.7),
                       fontSize: 14,
@@ -405,7 +421,9 @@ class ArticleCard extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          article.source?.name ?? 'Unknown',
+                          article.source?.name ??
+                              l10n?.unknownSource ??
+                              'Unknown',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurface.withOpacity(0.6),
                             fontSize: 12,
@@ -414,10 +432,11 @@ class ArticleCard extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        article.publishedAt?.toLocal().toString().split(
-                              ' ',
-                            )[0] ??
-                            'Unknown date',
+                        article.publishedAt != null
+                            ? DateFormat.yMMMd(
+                              Localizations.localeOf(context).languageCode,
+                            ).format(article.publishedAt!)
+                            : l10n?.unknownDate ?? 'Unknown date',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurface.withOpacity(0.6),
                           fontSize: 12,
@@ -442,7 +461,8 @@ class ArticleCard extends ConsumerWidget {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Could not open the article: $e',
+                                    l10n?.urlLaunchError(e.toString()) ??
+                                        'Could not open the article: $e',
                                   ),
                                 ),
                               );
@@ -450,7 +470,7 @@ class ArticleCard extends ConsumerWidget {
                           }
                         },
                         child: Text(
-                          'Read More',
+                          l10n?.readMore ?? 'Read More',
                           style: TextStyle(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.w600,
@@ -464,8 +484,16 @@ class ArticleCard extends ConsumerWidget {
                             onPressed: () {
                               if (article.url != null) {
                                 Share.share(
-                                  'Check out this article: ${article.title ?? 'No title'}\n${article.url}',
-                                  subject: article.title ?? 'News Article',
+                                  l10n?.shareText(
+                                        article.title ??
+                                            l10n?.noTitle ??
+                                            'No title',
+                                      ) ??
+                                      'Check out this article: ${article.title ?? 'No title'}',
+                                  subject:
+                                      article.title ??
+                                      l10n?.noTitle ??
+                                      'No title',
                                 );
                               }
                             },

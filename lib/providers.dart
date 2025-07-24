@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final themeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
 
+final localeProvider = StateProvider<Locale>((ref) => const Locale('en', ''));
+
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
 final bookmarkProvider = StateProvider<List<Article>>((ref) => []);
@@ -19,12 +21,11 @@ Future<void> toggleBookmark(WidgetRef ref, Article article) async {
   if (bookmarks.any((a) => a.url == article.url)) {
     ref.read(bookmarkProvider.notifier).state =
         bookmarks.where((a) => a.url != article.url).toList();
-    debugPrint('Removed bookmark: ${article.title}');
+    debugPrint('Removed bookmark: ${article.title ?? 'No title'}');
   } else {
     ref.read(bookmarkProvider.notifier).state = [...bookmarks, article];
-    debugPrint('Added bookmark: ${article.title}');
+    debugPrint('Added bookmark: ${article.title ?? 'No title'}');
   }
-  // Save bookmarks to shared_preferences
   final bookmarkJson =
       ref.read(bookmarkProvider).map((a) => a.toJson()).toList();
   await prefs.setString('bookmarkedArticles', jsonEncode(bookmarkJson));
@@ -69,9 +70,7 @@ class ArticleNotifier extends StateNotifier<ArticleState> {
   final Ref ref;
   final NewsServices _apiServices;
 
-  ArticleNotifier(this.ref, this._apiServices) : super(ArticleState()) {
-    fetchNews(ref.watch(searchQueryProvider));
-  }
+  ArticleNotifier(this.ref, this._apiServices) : super(ArticleState());
 
   Future<void> fetchNews(String query) async {
     try {
@@ -166,7 +165,9 @@ class ProfileImageNotifier extends StateNotifier<String?> {
 final articleProvider = StateNotifierProvider<ArticleNotifier, ArticleState>((
   ref,
 ) {
-  return ArticleNotifier(ref, NewsServices());
+  final notifier = ArticleNotifier(ref, NewsServices());
+  notifier.fetchNews(ref.watch(searchQueryProvider));
+  return notifier;
 });
 
 final categoryProvider =

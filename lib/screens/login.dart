@@ -48,6 +48,7 @@ class _LoginPageState extends State<LoginPage> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      
       backgroundColor: const Color(0xFFF3F6F9),
       body: Center(
         child: SingleChildScrollView(
