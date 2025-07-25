@@ -28,11 +28,12 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _loginError = null);
 
       // ✅ Navigate and pass username to HomePage
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
           builder: (context) => HomePage(username: storedUsername ?? ''),
         ),
+        (Route<dynamic> route) => false,
       );
 
       ScaffoldMessenger.of(
@@ -48,7 +49,6 @@ class _LoginPageState extends State<LoginPage> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      
       backgroundColor: const Color(0xFFF3F6F9),
       body: Center(
         child: SingleChildScrollView(
